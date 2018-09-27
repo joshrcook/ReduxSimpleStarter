@@ -1,11 +1,10 @@
+import _ from 'lodash';
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import YTSearch from 'youtube-api-search';
+import YoutubeSearch from './services/youtube-search';
 import SearchBar from './components/search_bar';
 import VideoList from './components/video_list';
 import VideoDetail from './components/video_detail';
-
-const API_KEY = 'AIzaSyA9Wn949xPAjsJ_16jsRAuk4d_L08Q8DP8';
 
 class App extends Component {
   constructor(props) {
@@ -16,18 +15,29 @@ class App extends Component {
       selectedVideo: null,
     };
 
-    YTSearch({key: API_KEY, term: 'surfboards'}, (videos) => {
-      this.setState({ 
-        videos, 
-        selectedVideo: videos[0],
+    this.handleVideoSearch('surfboards');
+  }
+
+  handleVideoSearch(term) {
+    console.log('searching...', 'term', term);
+    YoutubeSearch(term)
+      .then((videos) => {
+        this.setState({
+          videos, 
+          selectedVideo: videos[0]
+        });
+      })
+      .catch((e) => {
+        console.warn('The youtube search failed');
       });
-    });
   }
 
   render() {
+    const videoSearch = _.debounce((term) => {this.handleVideoSearch(term)}, 300);
+    
     return (
       <div>
-        <SearchBar />
+        <SearchBar onSearchTermChange={videoSearch} />
         <VideoDetail video={this.state.selectedVideo} />
         <VideoList 
           onVideoSelect={selectedVideo => this.setState({selectedVideo})}
